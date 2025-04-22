@@ -75,7 +75,6 @@ class GameViewSet(viewsets.ViewSet):
     @action(methods=['post'], detail=True, url_path='guess', url_name='game_logic')
     def guess(self, request, pk=None):
         '''Guess the letter and update the table'''
-
         game_obj = get_object_or_404(Game, pk=pk)
         print(f"STEP1={game_obj.__dir__}")
         serializer = GameDetailSerializer(game_obj, data=request.data)
@@ -107,10 +106,15 @@ class GameViewSet(viewsets.ViewSet):
             game_obj.incorrect_guess_made = incorrect_guess_made
             game_obj.incorrect_guess_remn = incorrect_guess_remn
             game_obj.game_status = game_status
-            game_obj.save()
-            res_obj = self.retrieve(request, pk=pk)
-            data1 = res_obj.data
-            data = {'status': data1,"guess": game_obj.guess}
+            game_obj.save(update_fields=["guess", "cur_state_word", "incorrect_guess_made",
+                                         "incorrect_guess_remn", "game_status"])
+            #res_obj = self.retrieve(request, pk=pk)
+            # data1 = res_obj.data
+            data = {'status': {'current_state_game': game_obj.game_status,
+                       'current_state_word': game_obj.cur_state_word,
+                       'number of incorrect guesses already made': game_obj.incorrect_guess_made,
+                       'number of incorrect guesses remaining': game_obj.incorrect_guess_remn},
+                    "guess": game_obj.guess}
             return Response(data, status=status.HTTP_200_OK)
   
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
