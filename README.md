@@ -1,6 +1,9 @@
-A Django Rest Framework based API has been used to power the frontend for a hangman game.
+Application
+-----------------------
+Django Rest Framework based API has been used to power the frontend for a hangman game.
 sqlite is used as backend database.
 This app exposes an API with the following endpoints. All requests and responses use the JSON data type.
+
 New game
 -----------------------
 The /game/new/ endpoint starts a new game. It assigns a random word from the list of following words for the player to guess:
@@ -21,3 +24,5 @@ The /game/<:id>/guess/ endpoint accepts a single character in JSON format
 "guess_letter": "e"
 }
 and return both the game state as defined in the Game state endpoint and if the guess was correct or not.
+
+![A game status image](./static/game_status_image.png)
