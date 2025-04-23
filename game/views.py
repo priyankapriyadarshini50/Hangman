@@ -13,7 +13,7 @@ from .serializers import GameSerializer, GameDetailSerializer
 
 def index(request):
     '''Testing purpose'''
-    return HttpResponse("Hello World")
+    return HttpResponse("Let's play the Hangman game")
 
 
 class GameViewSet(viewsets.ViewSet):
@@ -39,27 +39,26 @@ class GameViewSet(viewsets.ViewSet):
         game_obj = get_object_or_404(Game, pk=pk)
         serializer = GameSerializer(game_obj)
         data = serializer.data
-        game_status = {'current_state_game': data['game_status'],
-                       'current_state_word': data['cur_state_word'],
-                       'number of incorrect guesses already made': data['incorrect_guess_made'],
-                       'number of incorrect guesses remaining': data['incorrect_guess_remn']}
+        game_status = self.update_response_status(data['game_status'], data['cur_state_word'],
+                                                 data['incorrect_guess_made'], data['incorrect_guess_remn'])
+
         return Response(game_status)
     
     def get_guessed_data(self,guess_letter: str, answer: str, current_state_word: List):
-        """check if the guessing letter is correct or not"""
+        """check if the guessing letter is correct or not
+        returns a tuple with str values
+        """
         guess = "Incorrect"
-        print(f"STEP3, {current_state_word}")
+        new_state_word = list(current_state_word)
         if guess_letter in answer:
             guess = 'Correct'
-            print("STEP4")
             for indx, ch in enumerate(list(answer)):
                 if ch == guess_letter: 
                     if indx == 0:
-                        current_state_word[indx] = ch.upper()
+                        new_state_word[indx] = ch.upper()
                     else:
-                        current_state_word[indx] = ch
-            print(f"updated state STEP5= {current_state_word}")
-        return guess, ''.join(current_state_word)
+                        new_state_word[indx] = ch
+        return guess, ''.join(new_state_word)
     
     def get_game_status(self, incorrect_guess_remn: int, cur_state_word: str):
         """return the status of game"""
@@ -70,13 +69,22 @@ class GameViewSet(viewsets.ViewSet):
         else:
             game_status = "InProgess"
         return game_status
+    
+    def update_response_status(self, *args):
+        '''structure the response data'''
+        status = {}
+        status['current_state_game'] = args[0]
+        status['current_state_word'] = args[1]
+        status['number of incorrect guesses already made'] = args[2]
+        status['number of incorrect guesses remaining'] = args[3]
+        return status
 
 
     @action(methods=['post'], detail=True, url_path='guess', url_name='game_logic')
     def guess(self, request, pk=None):
         '''Guess the letter and update the table'''
         game_obj = get_object_or_404(Game, pk=pk)
-        print(f"STEP1={game_obj.__dir__}")
+
         serializer = GameDetailSerializer(game_obj, data=request.data)
         if serializer.is_valid():
             guess_letter = serializer.validated_data['guess_letter'].lower()
@@ -86,18 +94,12 @@ class GameViewSet(viewsets.ViewSet):
             alwd_incorrect_guess = game_obj.alwd_incorrect_guess
             incorrect_guess_remn = game_obj.incorrect_guess_remn
 
-            print(f"STEP2={guess_letter, current_state_word, answer}")
-            guess_value, up_cur_state_word = self.get_guessed_data(
+            guess_value, current_state_word = self.get_guessed_data(
                 guess_letter, answer, current_state_word)
 
-            if up_cur_state_word:
-                current_state_word = up_cur_state_word #str
-                print("STEP6")
             if guess_value == 'Incorrect':
                 incorrect_guess_made = incorrect_guess_made + 1
                 incorrect_guess_remn = alwd_incorrect_guess - incorrect_guess_made
-
-            print(f"updated game obj={game_obj}")
 
             game_status = self.get_game_status(incorrect_guess_remn, current_state_word)
 
@@ -108,12 +110,10 @@ class GameViewSet(viewsets.ViewSet):
             game_obj.game_status = game_status
             game_obj.save(update_fields=["guess", "cur_state_word", "incorrect_guess_made",
                                          "incorrect_guess_remn", "game_status"])
-            #res_obj = self.retrieve(request, pk=pk)
-            # data1 = res_obj.data
-            data = {'status': {'current_state_game': game_obj.game_status,
-                       'current_state_word': game_obj.cur_state_word,
-                       'number of incorrect guesses already made': game_obj.incorrect_guess_made,
-                       'number of incorrect guesses remaining': game_obj.incorrect_guess_remn},
+
+            gm_status = self.update_response_status(game_status, current_state_word,
+                                        incorrect_guess_made, incorrect_guess_remn)
+            data = {'status': gm_status,
                     "guess": game_obj.guess}
             return Response(data, status=status.HTTP_200_OK)
   
