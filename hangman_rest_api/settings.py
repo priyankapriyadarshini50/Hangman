@@ -73,7 +73,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'hangman_rest_api.wsgi.application'
 
-
+# Caching
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379",
+        "TIMEOUT": 120,
+    }
+}
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
