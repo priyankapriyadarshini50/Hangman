@@ -4,7 +4,7 @@ Django Rest Framework based API has been used to power the frontend for a hangma
 sqlite is used as backend database.
 This app exposes an API with the following endpoints. All requests and responses use the JSON data type.
 Django backend Caching(Redis cache) has been implemeted to improve the performance, reduce latency and
-serves more requests.
+reduce database connection.
 
 New game
 -----------------------
