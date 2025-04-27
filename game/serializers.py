@@ -21,3 +21,10 @@ class GameDetailSerializer(serializers.ModelSerializer):
                 "Please enter a Valid Letter"
             )
         return value
+
+class GameHelperSerializer(serializers.Serializer):
+    '''serializer class make the response of the game'''
+    current_state_game = serializers.CharField()
+    current_state_word = serializers.CharField()
+    number_of_incorrect_guesses_already_made = serializers.CharField(source='incorrect_guess_made')
+    number_of_incorrect_guesses_remaining = serializers.CharField(source='incorrect_guess_remn')

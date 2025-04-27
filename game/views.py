@@ -1,4 +1,5 @@
 import random
+import logging
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -7,11 +8,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
 from game.models import Game
-from game.serializers import GameSerializer, GameDetailSerializer
+from game.serializers import (GameSerializer, GameDetailSerializer, 
+                              GameHelperSerializer)
 from core.localcache import GameCache
 from core.gamehelper import GameHelper
 
-
+logger = logging.getLogger("game")
 
 def index(request):
     '''Testing purpose'''
@@ -44,7 +46,7 @@ class GameViewSet(viewsets.ViewSet):
 
         if not game_help_obj:
             game_obj = get_object_or_404(Game, pk=pk)
-            print('db called')
+            logger.debug('db called')
             serializer = GameSerializer(game_obj)
             data = serializer.data
             game_help_obj = GameHelper(current_state_word=data['cur_state_word'],
@@ -52,22 +54,20 @@ class GameViewSet(viewsets.ViewSet):
                                        incorrect_guess_remn=data['incorrect_guess_remn'],
                                        alwd_incorrect_guess=data['alwd_incorrect_guess'],
                                        answer=data['game_word'],
-                                       game_status=data['game_status']
-                                       ).create_cache_status(
-                                           data['guess']
+                                       current_state_game=data['game_status']
                                        )
             GameCache.set_to_cache(pk, game_help_obj)
         res = self.makeGameResponse(game_help_obj)
 
-        return Response(res)
+        return Response(res, status=status.HTTP_200_OK)
 
     def save_final_game(self, pk, cached_status):
         '''save the final result to db'''
         Game.objects.filter(id=pk).update(
-            incorrect_guess_made= cached_status.get('number of incorrect guesses already made'),
-            incorrect_guess_remn = cached_status.get('number of incorrect guesses remaining'),
-            game_status = cached_status.get('current_state_game'),
-            cur_state_word = cached_status.get('current_state_word'),
+            incorrect_guess_made= cached_status.incorrect_guess_made,
+            incorrect_guess_remn = cached_status.incorrect_guess_remn,
+            game_status = cached_status.current_state_game,
+            cur_state_word = cached_status.current_state_word,
         )
 
     @action(methods=['post'], detail=True, url_path='guess', url_name='game_logic')
@@ -83,12 +83,12 @@ class GameViewSet(viewsets.ViewSet):
 
             if cached_status:
                 data = {
-                    'answer': cached_status.get('answer'),  # "bottle"
-                    'current_state_word': cached_status.get('current_state_word'), # str
-                    'incorrect_guess_made': cached_status.get('number of incorrect guesses already made'),
-                    'alwd_incorrect_guess': cached_status.get('alwd_incorrect_guess'),
-                    'incorrect_guess_remn': cached_status.get('number of incorrect guesses remaining'),
-                    'current_state_game': cached_status.get('current_state_game')
+                    'answer': cached_status.answer,  # "bottle"
+                    'current_state_word': cached_status.current_state_word, # str
+                    'incorrect_guess_made': cached_status.incorrect_guess_made,
+                    'alwd_incorrect_guess': cached_status.alwd_incorrect_guess,
+                    'incorrect_guess_remn': cached_status.incorrect_guess_remn,
+                    'current_state_game': cached_status.current_state_game,
                 }
             else:
                 game_obj = get_object_or_404(Game, pk=pk)
@@ -101,29 +101,25 @@ class GameViewSet(viewsets.ViewSet):
                     'current_state_game': game_obj.game_status
                 }
 
-            updated_status_obj = GameHelper(**data).post(guess_letter) #dict
+            # returns an updated gamehelper object
+            updated_status_obj = GameHelper(**data).post(guess_letter)
 
             GameCache.set_to_cache(pk, updated_status_obj)
 
-            if updated_status_obj.get("game_over"):
-                self.save_final_game(pk, updated_status_obj)   
+            if updated_status_obj.game_over:
+                self.save_final_game(pk, updated_status_obj)
             res = self.makeGameResponse(updated_status_obj)
 
-            return Response({'status': res, "guess": "comming..."}, status=status.HTTP_200_OK)
+            return Response({'status': res, "guess": updated_status_obj.guess}, status=status.HTTP_200_OK)
         except ConnectionError as e:
-            print(f"ERROR={e}")
+            logger.error("ERROR = %s", e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @staticmethod
     def makeGameResponse(game_help_obj):
         '''
-        Make a prpepr response for the endusers
+        Make a proper response for the endusers
         '''
 
-        if isinstance(game_help_obj, dict):
-            return {
-            'current_state_game': game_help_obj.get('current_state_game'),
-            'current_state_word': game_help_obj.get('current_state_word'),
-            'number of incorrect guesses already made': game_help_obj.get('number of incorrect guesses already made'),
-            'number of incorrect guesses remaining': game_help_obj.get('number of incorrect guesses remaining'),
-        }
+        if isinstance(game_help_obj, GameHelper):
+            return GameHelperSerializer(game_help_obj).data

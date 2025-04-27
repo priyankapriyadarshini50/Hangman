@@ -3,3 +3,4 @@ __pycache__/
 *.py[cod]
 *.cpython*
 db.sqlite3
+logs/
