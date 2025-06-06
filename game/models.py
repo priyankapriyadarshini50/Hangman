@@ -17,6 +17,8 @@ class Game(models.Model):
     guess_letter = models.CharField(max_length=5, null=True)
     guess = models.CharField(max_length=30, choices=[('Correct', 'Correct'), ('Incorrect', 'Incorrect')], default=' ')
     created_at = models.DateTimeField(auto_now_add=True)
+    # is_game_over = models.BooleanField(default=False)
+    # game = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.game_word

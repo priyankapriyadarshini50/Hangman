@@ -1,12 +1,8 @@
-from .views import GameViewSet
-from django.urls import path,include
-from rest_framework.routers import DefaultRouter
+from django.urls import path
+from game.views import (CreateNewGame, GameStatus, PlayGame)
 
-# router = DefaultRouter()
-# router.register(r'new', GameViewSet, basename='new')
 urlpatterns = [
-    # path('', include(router.urls)),
-    path('new/', GameViewSet.as_view({'get': 'list'})),
-    path('<int:pk>/', GameViewSet.as_view({'get': 'retrieve'})),
-    path('<int:pk>/guess/', GameViewSet.as_view({'post': 'guess'})),
+    path('new/', CreateNewGame.as_view()),
+    path('<int:pk>/', GameStatus.as_view()),
+    path('<int:pk>/guess/', PlayGame.as_view()),
 ]

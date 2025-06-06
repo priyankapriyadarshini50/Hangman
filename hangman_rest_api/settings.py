@@ -9,25 +9,32 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
-import os
+import dotenv
+from os import getenv, path
 from pathlib import Path
-from dotenv import load_dotenv
-load_dotenv()
-
+from datetime import timedelta
+from django.core.management.utils import get_random_secret_key
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+dotenv_file_path = BASE_DIR / '.env'
+
+if path.isfile(dotenv_file_path):
+    dotenv.load_dotenv(dotenv_file_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = getenv("SECRET_KEY", get_random_secret_key)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(getenv('DEBUG', 'False'))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = getenv(
+    'DJANGO_ALLOWED_HOSTS',
+    '127.0.0.1, localhost'
+).split(',')
 
 
 # Application definition
@@ -39,8 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'game',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'game',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -91,6 +101,15 @@ DATABASES = {
     }
 }
 
+REST_FRAMEWORK = {
+     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'users.authentication.CookieJWTAuthentication',
+     ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ]
+}
+
 # Logging
 LOGGING = {
     "version": 1,
@@ -131,11 +150,11 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["console", "file"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "level": getenv("DJANGO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
         "game": {
-            "handlers": ["file"],
+            "handlers": ["file_app"],
             "level": "DEBUG",
             "propagate": False,
         },
@@ -185,3 +204,12 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.GameUsers'
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+}
