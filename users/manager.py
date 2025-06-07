@@ -2,24 +2,39 @@ from django.contrib.auth.models import BaseUserManager
 
 class GameUserManager(BaseUserManager):
     '''Custom manager class for custom user model- GameUser'''
-    def create_user(self, email, password=None, **other_fields):
-        '''override for creating a custom user'''
 
-        if email is None:
-            raise ValueError("msg: Email is required")
+    def _create_user(self, email, password, **extra_fields):
+        """Create and save a custom User with
+        the given email and password.
+        """
+        if not email:
+            raise ValueError('The given email must be set')
 
-        user = self.model(email=self.normalize_email(email), **other_fields)
+        user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **other_fields):
-        '''overrride the super user method for creating a user'''
+    def create_user(self, email, password=None, **extra_fields):
+        """Override create and save a regular User with
+          the given email and password.
+        """
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(email, password, **extra_fields)
 
-        other_fields.setdefault("is_staff", True)
-        other_fields.setdefault("is_superuser", True)
+    def create_superuser(self, email, password, **extra_fields):
+        """ 
+        Override the create and save of a SuperUser
+        with the given email and password.
+        """
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
 
-        user = self.create_user(email=self.normalize_email(email), 
-                                password=password, **other_fields)
-        user.save(using=self._db)
-        return user
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self._create_user(email, password, **extra_fields)
+

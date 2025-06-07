@@ -54,8 +54,8 @@ class GameUserInfo(APIView):
 
 class LogInView(APIView):
     '''
+    Allow users to login to the application
     '''
-    print('Login View is called')
     def get_tokens_for_user(self, user):
         '''
         Create a access token and refreshed token
