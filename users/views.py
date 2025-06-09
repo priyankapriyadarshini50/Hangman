@@ -5,21 +5,31 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import authentication, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
+from users.authentication import CookieJWTAuthentication
 
 
 from users.serializer import (GameUserInfoSerializer, RegisterGameUserSerializer,
                             GameLogingSerializer)
 from users.models import GameUsers
 # Create your views here.
-class RegisterGameUser(generics.CreateAPIView):
-    serializer_class = RegisterGameUserSerializer
+class RegisterGameUser(APIView):
+    '''
+    Create a user object
+    '''
+    def post(self, request, *args, **kwargs):
+        serializer = RegisterGameUserSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class GameUserInfo(APIView):
     '''View to a single user
     * Only Authenticated users are able to access this view
     '''
-    # permission_classes = [permissions.IsAuthenticated]
-    # authentication_classes = [authentication.JWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
     serializer_class = GameUserInfoSerializer
 
     def get(self, request, *args, **kwargs):
@@ -69,6 +79,7 @@ class LogInView(APIView):
         }
 
     def post(self, request):
+        print("STEP1", request.data)
         serializer = GameLogingSerializer(data=request.data)
 
         if serializer.is_valid():

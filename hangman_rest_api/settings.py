@@ -107,7 +107,7 @@ DATABASES = {
 
 REST_FRAMEWORK = {
      'DEFAULT_AUTHENTICATION_CLASSES': [
-        'users.authentication.CookieJWTAuthentication',
+        'users.authentication.CookieJWTAuthentication', # custom authentication
      ],
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',

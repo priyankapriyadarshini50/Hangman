@@ -6,8 +6,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import permissions
+from users.authentication import CookieJWTAuthentication
 from game.models import Game
-from game.serializers import (GameSerializer, GameDetailSerializer, 
+from game.serializers import (GameSerializer, GameDetailSerializer,
                               GameHelperSerializer)
 from core.localcache import GameCache
 from core.gamehelper import GameHelper
@@ -33,6 +35,8 @@ class GameBaseAPI(APIView):
 
 class CreateNewGame(APIView):
     '''Creates a new Game object'''
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
 
     def get(self, request):
         """Create a game object with default values"""
@@ -52,6 +56,8 @@ class CreateNewGame(APIView):
 
 class GameStatus(GameBaseAPI):
     '''Provide the status of the game'''
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
     def get(self, request, pk=None):
         """read a single game object or status"""
 
@@ -76,6 +82,8 @@ class GameStatus(GameBaseAPI):
 
 class PlayGame(GameBaseAPI):
     '''Guess and Play the game'''
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
     def post(self, request, pk=None):
         '''Guess the letter and update the table'''
         try:
@@ -115,11 +123,12 @@ class PlayGame(GameBaseAPI):
                 self.save_final_game(pk, updated_status_obj)
             res = self.makeGameResponse(updated_status_obj)
 
-            return Response({'status': res, "guess": updated_status_obj.guess}, status=status.HTTP_200_OK)
+            return Response({'status': res, "guess": updated_status_obj.guess},
+                            status=status.HTTP_200_OK)
         except ConnectionError as e:
             logger.error("ERROR from Play Game= %s", e)
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        
+
     def save_final_game(self, pk, cached_status):
         '''save the final result to db'''
         Game.objects.filter(id=pk).update(

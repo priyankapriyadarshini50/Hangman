@@ -3,10 +3,23 @@ from rest_framework.exceptions import AuthenticationFailed
 
 class CookieJWTAuthentication(JWTAuthentication):
     '''
-    Creating a cookie based authentication
+    Cchecking a cookie based authentication
+    This is a custom middleware to extract token from cookies
     '''
+    def check_auth_header(self, request):
+        '''
+        Check for JWT token in the Authorization header
+        '''
+        return super().authenticate(request)
+
     def authenticate(self, request):
         print("Cookie authentication")
+
+        # Look for JWT in the "Authorization" header
+        auth_header = self.check_auth_header(request)
+        if auth_header:
+            return auth_header
+
         token = request.COOKIES.get("access_token")
         print(token)
         if not token:
