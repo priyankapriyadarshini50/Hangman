@@ -9,10 +9,12 @@ PostgresSQL is used as backend database (sqllite can be used).
 * Also, I have followed object oriented programming structure for better
 code modularity and reusability.
 * Added django logging for production ready and for better troubleshooting.  
+* Customize the Django User model as per the game requirement
 * Hybrid JWT secure cookie based Authentication is implemented to secure the rest APIs endpoints and user is 
 able to securly login and play games and logout of the application.
 * Store the refresh token in an HttpOnly cookie (protected from JS access)
 * I have set authentication middleware to accept and validate the cookies
+* Swagger has been integrated with the Django game Application
 
 New game
 -----------------------
@@ -44,9 +46,11 @@ The api/users/register/ endpoint allow users to register and returns Users data 
 Login a user
 -----------------------
 The api/users/login/ endpoint allow users to login to application after verifying the credentials 
-and returns users info in JSON format with token as cookies
+and returns users info in JSON format with JWT token as cookies
 
 Logout a user
 -----------------------
 The api/users/logout/ endpoint allow users to logout from application after deleting the tokens 
 and returns a success message in JSON format
+
+![All the APIs in swagger](./static/Swagger-2025-06-16.png)

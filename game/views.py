@@ -37,6 +37,7 @@ class CreateNewGame(APIView):
     '''Creates a new Game object'''
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+    serializer_class = GameSerializer
 
     def get(self, request):
         """Create a game object with default values"""
@@ -50,7 +51,7 @@ class CreateNewGame(APIView):
                                        cur_state_word=cur_state_word,
                                        incorrect_guess_remn=incorrect_guess_remn,
                                        incorrect_guess_made=incorrect_guess_made)
-        serializer = GameSerializer(queryset)
+        serializer = self.serializer_class(queryset)
         data = {'id': serializer.data['id']}
         return Response(data, status=status.HTTP_200_OK) # JSONRender
 
@@ -58,6 +59,7 @@ class GameStatus(GameBaseAPI):
     '''Provide the status of the game'''
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+    serializer_class = GameSerializer
     def get(self, request, pk=None):
         """read a single game object or status"""
 
@@ -66,7 +68,7 @@ class GameStatus(GameBaseAPI):
         if not game_help_obj:
             game_obj = get_object_or_404(Game, pk=pk)
             logger.debug('db called')
-            serializer = GameSerializer(game_obj)
+            serializer = self.get_serializer(game_obj)
             data = serializer.data
             game_help_obj = GameHelper(current_state_word=data['cur_state_word'],
                                        incorrect_guess_made=data['incorrect_guess_made'],
@@ -84,10 +86,11 @@ class PlayGame(GameBaseAPI):
     '''Guess and Play the game'''
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [CookieJWTAuthentication]
+    serializer_class = GameDetailSerializer
     def post(self, request, pk=None):
         '''Guess the letter and update the table'''
         try:
-            serializer = GameDetailSerializer(data=request.data)
+            serializer = self.serializer_class(data=request.data)
 
             if serializer.is_valid():
                 guess_letter = serializer.validated_data["guess_letter"].lower()

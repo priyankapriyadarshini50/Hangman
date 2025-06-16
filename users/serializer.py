@@ -9,6 +9,12 @@ class RegisterGameUserSerializer(serializers.ModelSerializer):
         fields = ('email', 'username', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
+    def create(self, validated_data):
+        '''overrides the create()/serializer.save() method
+        so that customize user's create_user() is called
+        '''
+        return GameUsers.objects.create_user(**validated_data)
+
 class GameUserInfoSerializer(serializers.ModelSerializer):
     '''
     serialize/deserialize a single user data
@@ -45,7 +51,13 @@ class GameLogingSerializer(serializers.Serializer):
         # authentication required with email and password
         # need to overrride the method
         user = authenticate(request=None, **data)
-        print(user)
+        print("User is validated")
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Incorrect credentials")
+    
+class EmptySerializer(serializers.Serializer):
+    '''
+    added just to have a clear OpenAPI schema
+    '''
+    pass

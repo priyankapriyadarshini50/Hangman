@@ -9,15 +9,16 @@ from users.authentication import CookieJWTAuthentication
 
 
 from users.serializer import (GameUserInfoSerializer, RegisterGameUserSerializer,
-                            GameLogingSerializer)
+                            GameLogingSerializer, EmptySerializer)
 from users.models import GameUsers
 # Create your views here.
 class RegisterGameUser(APIView):
     '''
     Create a user object
     '''
+    serializer_class = RegisterGameUserSerializer
     def post(self, request, *args, **kwargs):
-        serializer = RegisterGameUserSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             serializer.save()
@@ -66,6 +67,7 @@ class LogInView(APIView):
     '''
     Allow users to login to the application
     '''
+    serializer_class = GameLogingSerializer
     def get_tokens_for_user(self, user):
         '''
         Create a access token and refreshed token
@@ -80,7 +82,7 @@ class LogInView(APIView):
 
     def post(self, request):
         print("STEP1", request.data)
-        serializer = GameLogingSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             user_obj = serializer.validated_data
@@ -113,9 +115,8 @@ class LogOutView(APIView):
     '''
     User can logged out
     '''
-
+    serializer_class = EmptySerializer
     def post(self, request):
-        print("STEP 1")
         refresh_token = request.COOKIES.get('refresh_token')
         print("STEP 2", refresh_token)
         if refresh_token:
