@@ -79,6 +79,26 @@ class LogInView(APIView):
             'refresh_token': str(refresh),
             'access_token': str(refresh.access_token),
         }
+    
+    def set_jwt_cookies_in_res(self, res_obj, token):
+
+        res_obj.set_cookie(key='access_token',
+                                value=token.get('access_token'),
+                                max_age=None,
+                                expires=None,
+                                secure=True,
+                                httponly=True,
+                                samesite=None,
+                                )
+        res_obj.set_cookie(key='refresh_token',
+                            value=token.get('refresh_token'),
+                            max_age=None,
+                            expires=None,
+                            secure=True,
+                            httponly=True,
+                            samesite=None,
+                            )
+        return res_obj
 
     def post(self, request):
         print("STEP1", request.data)
@@ -92,23 +112,8 @@ class LogInView(APIView):
             print(f'login={token}')
             res_data = Response({'user': GameUserInfoSerializer(user_obj).data},
                                 status=status.HTTP_200_OK)
-            res_data.set_cookie(key='access_token',
-                                value=token.get('access_token'),
-                                max_age=None,
-                                expires=None,
-                                secure=True,
-                                httponly=True,
-                                samesite='Strict',
-                                )
-            res_data.set_cookie(key='refresh_token',
-                                value=token.get('refresh_token'),
-                                max_age=None,
-                                expires=None,
-                                secure=True,
-                                httponly=True,
-                                samesite='Strict',
-                                )
-            return res_data
+            return self.set_jwt_cookies_in_res(res_data, token)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LogOutView(APIView):
