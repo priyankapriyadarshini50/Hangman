@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.exceptions import TokenError, AuthenticationFailed
 
 class CookieJWTAuthentication(JWTAuthentication):
     '''
@@ -19,15 +19,24 @@ class CookieJWTAuthentication(JWTAuthentication):
         auth_header = self.check_auth_header(request)
         if auth_header:
             return auth_header
+        
+        # exclude authentication for swagger and redoc
+        allowed_paths = ['/api/docs/swagger/', '/api/docs/redoc/', '/api/schema/']
+        if request.path in allowed_paths:
+            return None
 
-        token = request.COOKIES.get("access_token")
-        print('found the token')
-        if not token:
+        raw_token = request.COOKIES.get("access_token")
+        if raw_token:
+            print('found the token')
+        if not raw_token:
             return None
         try:
-            validated_token = self.get_validated_token(token)
-
+            validated_token = self.get_validated_token(raw_token) # raise Validation error
             user = self.get_user(validated_token)
             return user, validated_token
         except AuthenticationFailed as e:
-            raise AuthenticationFailed(f'Token validation Failed: {e}')
+            print(f"Token error: {e}")
+            raise AuthenticationFailed({
+                "detail": "Your token is expired or invalid"
+            })
+       

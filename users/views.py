@@ -5,6 +5,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import authentication, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import (
+                            TokenObtainPairView,
+                            TokenRefreshView,
+                            TokenBlacklistView)
+from rest_framework_simplejwt.exceptions import InvalidToken
 from users.authentication import CookieJWTAuthentication
 
 
@@ -131,3 +136,30 @@ class LogOutView(APIView):
         res.delete_cookie('access_token')
         res.delete_cookie('refresh_token')
         return res
+    
+class GetRefreshTokenView(TokenRefreshView):
+    '''
+    Get a new access token using the refresh token
+    '''
+    # permission_classes = [permissions.IsAuthenticated]
+    # authentication_classes = [CookieJWTAuthentication]
+
+    def post(self, request):
+        refresh_token = request.COOKIES.get('refresh_token')
+        if not refresh_token:
+            return Response({"error": "Refresh token not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            token = RefreshToken(refresh_token)
+            access_token = str(token.access_token)
+            response = Response({"message":"Access token is refreshed"}, status=status.HTTP_200_OK)
+            response.set_cookie(key='access_token',
+                                value=access_token,
+                                max_age=None,
+                                expires=None,
+                                secure=True,
+                                httponly=True,
+                                samesite=None)
+            return response
+        except InvalidToken as e:
+            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)

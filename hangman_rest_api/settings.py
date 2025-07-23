@@ -33,7 +33,7 @@ DEBUG = bool(getenv('DEBUG', 'False'))
 
 ALLOWED_HOSTS = getenv(
     'DJANGO_ALLOWED_HOSTS',
-    '127.0.0.1, localhost'
+    '127.0.0.1,localhost'
 ).split(',')
 
 
@@ -111,9 +111,10 @@ DATABASES = {
 REST_FRAMEWORK = {
      'DEFAULT_AUTHENTICATION_CLASSES': [
         'users.authentication.CookieJWTAuthentication', # custom authentication
+        #'rest_framework_simplejwt.authentication.JWTAuthentication',
      ],
      'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    # 'DEFAULT_PERMISSION_CLASSES': [
+    #  'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',
     # ]
 }
@@ -224,5 +225,5 @@ SIMPLE_JWT = {
 }
 
 # allow api call from front end
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [getenv('FRONTEND_HOST')]
