@@ -10,6 +10,7 @@ from rest_framework_simplejwt.views import (
                             TokenRefreshView,
                             TokenBlacklistView)
 from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.exceptions import ExpiredTokenError
 from users.authentication import CookieJWTAuthentication
 
 
@@ -130,8 +131,11 @@ class LogOutView(APIView):
         refresh_token = request.COOKIES.get('refresh_token')
         print("STEP 2", refresh_token)
         if refresh_token:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except (InvalidToken,ExpiredTokenError)  as e:
+                print("The refresh token is invalid or expired", e)
         res = Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
         res.delete_cookie('access_token')
         res.delete_cookie('refresh_token')
@@ -159,7 +163,9 @@ class GetRefreshTokenView(TokenRefreshView):
                                 expires=None,
                                 secure=True,
                                 httponly=True,
-                                samesite=None)
+                                samesite='Lax')
             return response
         except InvalidToken as e:
             return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
+        except ExpiredTokenError:
+            return Response({"error": "Refresh token has expired"}, status=status.HTTP_403_FORBIDDEN)

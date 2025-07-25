@@ -1,16 +1,23 @@
+from django.conf import settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import TokenError, AuthenticationFailed
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
 class CookieJWTAuthentication(JWTAuthentication):
     '''
-    Cchecking a cookie based authentication
-    This is a custom middleware to extract token from cookies
+    Checking a cookie based authentication
+    This is a custom global middleware to extract token from cookies
+    before each view is called
+    It will check for the JWT token in the cookies first,
     '''
     def check_auth_header(self, request):
         '''
         Check for JWT token in the Authorization header
         '''
         return super().authenticate(request)
+    
+    def is_public_path(self, path):
+        '''Check if the path is public and does not require authentication'''
+        return path in settings.API_WHITELISTED_PATHS
 
     def authenticate(self, request):
         print("Cookie authentication")
@@ -21,8 +28,7 @@ class CookieJWTAuthentication(JWTAuthentication):
             return auth_header
         
         # exclude authentication for swagger and redoc
-        allowed_paths = ['/api/docs/swagger/', '/api/docs/redoc/', '/api/schema/']
-        if request.path in allowed_paths:
+        if self.is_public_path(request.path):
             return None
 
         raw_token = request.COOKIES.get("access_token")

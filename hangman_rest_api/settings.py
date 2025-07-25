@@ -216,6 +216,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.GameUsers'
 
+# APIs that should bypass custom JWT authentication
+API_WHITELISTED_PATHS = [
+    '/api/v1/users/logout/',
+    '/api/docs/swagger/',
+    '/api/docs/redoc/',
+    '/api/schema/'  
+]
+
 # settings for token expiration
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
