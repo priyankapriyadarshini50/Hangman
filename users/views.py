@@ -1,22 +1,17 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
-from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import authentication, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import (
-                            TokenObtainPairView,
-                            TokenRefreshView,
-                            TokenBlacklistView)
-from rest_framework_simplejwt.exceptions import InvalidToken
-from rest_framework_simplejwt.exceptions import ExpiredTokenError
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.exceptions import (InvalidToken, ExpiredTokenError)
+
 from users.authentication import CookieJWTAuthentication
-
-
 from users.serializer import (GameUserInfoSerializer, RegisterGameUserSerializer,
                             GameLogingSerializer, EmptySerializer)
 from users.models import GameUsers
+
 # Create your views here.
 class RegisterGameUser(APIView):
     '''
@@ -87,7 +82,7 @@ class LogInView(APIView):
         }
     
     def set_jwt_cookies_in_res(self, res_obj, token):
-
+        ''' set cookies in the browser or the response object'''
         res_obj.set_cookie(key='access_token',
                                 value=token.get('access_token'),
                                 max_age=None,
@@ -112,10 +107,8 @@ class LogInView(APIView):
 
         if serializer.is_valid():
             user_obj = serializer.validated_data
-            # refresh_token = RefreshToken(user_data)
-            # access_token = str(refresh_token.access_token)
             token = self.get_tokens_for_user(user_obj)
-            print(f'login={token}')
+
             res_data = Response({'user': GameUserInfoSerializer(user_obj).data},
                                 status=status.HTTP_200_OK)
             return self.set_jwt_cookies_in_res(res_data, token)
@@ -126,10 +119,10 @@ class LogOutView(APIView):
     '''
     User can logged out
     '''
-    serializer_class = EmptySerializer
+    serializer_class = EmptySerializer # used to have a clear OpenAPI schema
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
-        print("STEP 2", refresh_token)
+
         if refresh_token:
             try:
                 token = RefreshToken(refresh_token)
@@ -146,7 +139,7 @@ class GetRefreshTokenView(TokenRefreshView):
     Get a new access token using the refresh token
     '''
     # permission_classes = [permissions.IsAuthenticated]
-    # authentication_classes = [CookieJWTAuthentication]
+    authentication_classes = [CookieJWTAuthentication]
 
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')

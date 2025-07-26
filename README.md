@@ -14,11 +14,12 @@ code modularity and reusability.
 able to securly login and play games and logout of the application.
 * Store the refresh token in an HttpOnly cookie (protected from JS access)
 * I have set authentication middleware to accept and validate the cookies
+* CORS headers has been implemented for security
 * Swagger has been integrated with the Django game Application
 
 New game
 -----------------------
-The api/game/new/ endpoint starts a new game. It assigns a random word from the list of following words for the player to guess:
+The api/v1/game/new/ endpoint starts a new game. It assigns a random word from the list of following words for the player to guess:
 ["Hangman", "Python", "Django", "Bottle", "Data"]
 The player are allowed to guess incorrectly the number of characters in the word. So for example if the selected word in "Django", 
 the player can make 5 incorrect guesses before loosing the game.
@@ -26,12 +27,12 @@ This endpoint should return the id of the newly created game object.
 
 Game state
 ------------------------
-The api/game/<:id>/ endpoint accepts a game id and returns a state which contains:
+The api/v1/game/<:id>/ endpoint accepts a game id and returns a state which contains:
 The current state of the game. InProgress , Lost , or Won .
 
 Guess
 --------------------------
-The api/game/<:id>/guess/ endpoint accepts a single character in JSON format 
+The api/v1/game/<:id>/guess/ endpoint accepts a single character in JSON format 
 {
 "guess_letter": "e"
 }
@@ -41,16 +42,16 @@ and return both the game state as defined in the Game state endpoint and if the 
 
 Register a user
 -----------------------
-The api/users/register/ endpoint allow users to register and returns Users data with 200 OK status
+The api/v1/users/register/ endpoint allow users to register and returns Users data with 200 OK status
 
 Login a user
 -----------------------
-The api/users/login/ endpoint allow users to login to application after verifying the credentials 
+The api/v1/users/login/ endpoint allow users to login to application after verifying the credentials 
 and returns users info in JSON format with JWT token as cookies
 
 Logout a user
 -----------------------
-The api/users/logout/ endpoint allow users to logout from application after deleting the tokens 
+The api/v1/users/logout/ endpoint allow users to logout from application after deleting the tokens 
 and returns a success message in JSON format
 
-![All the APIs in swagger](./static/Swagger-2025-06-16.png)
+![All the APIs in swagger](./static/Swagger_2025-07-26.png)

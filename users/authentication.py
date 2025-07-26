@@ -1,6 +1,9 @@
+import logging
 from django.conf import settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
+
+django_logger = logging.getLogger('django')
 
 class CookieJWTAuthentication(JWTAuthentication):
     '''
@@ -41,7 +44,7 @@ class CookieJWTAuthentication(JWTAuthentication):
             user = self.get_user(validated_token)
             return user, validated_token
         except AuthenticationFailed as e:
-            print(f"Token error: {e}")
+            django_logger.error(f"Token error: {e}")
             raise AuthenticationFailed({
                 "detail": "Your token is expired or invalid"
             })

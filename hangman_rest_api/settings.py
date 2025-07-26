@@ -114,9 +114,9 @@ REST_FRAMEWORK = {
         #'rest_framework_simplejwt.authentication.JWTAuthentication',
      ],
      'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    #  'DEFAULT_PERMISSION_CLASSES': [
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ]
+     'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
 }
 
 # Logging
@@ -232,6 +232,7 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-# allow api call from front end
+# allow api call from front end(different domain)
+# for cookie based authentication browser can send credentials accross domains
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [getenv('FRONTEND_HOST')]
